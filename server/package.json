@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Luam FMenezes",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/socket.io": "^2.1.12",
+    "cors": "^2.8.5",
+    "nodemon": "^2.0.7",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  }
+}
