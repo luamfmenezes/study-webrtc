@@ -1,23 +1,52 @@
 import socketIo from "socket.io";
 
-class CallChannel {
+let activeSockets: string[] = [];
+
+interface ICallUser {
+  to: string;
+  offer: string;
+}
+
+interface IMakeAnswer {
+  to: string;
+  answer: string;
+}
+
+class CallController {
   constructor(private namespace: socketIo.Namespace) {
     namespace.on("connection", (socket) => {
-      // Get information, if the token was ok pass
-      // console.log("connected", JSON.stringify(socket.request._query));
+      console.log("connected", socket.id);
 
-      // save socket_id - user_id -> redis
-
-      // join todos:user_id
-      socket.on("create", (socket) => {
-        // call a service
-        console.log("create todo");
+      socket.emit("update-user-list", {
+        users: activeSockets,
       });
-      socket.on("create", (socket) => {
-        // call a service
+
+      socket.broadcast.emit("update-user-list", {
+        users: activeSockets,
+      });
+
+      socket.on("call-user", (data: ICallUser) => {
+        socket.to(data.to).emit("call-made", {
+          offer: data.offer,
+          socket: socket.id,
+        });
+      });
+
+      socket.on("make-answer", (data: IMakeAnswer) => {
+        socket.to(data.to).emit("answer-made", {
+          socket: socket.id,
+          answer: data.answer,
+        });
+      });
+
+      socket.on("disconnect", () => {
+        console.log("disconnected", socket.id);
+        activeSockets = activeSockets.filter(
+          (existingSocket) => existingSocket !== socket.id
+        );
       });
     });
   }
 }
 
-export default CallChannel;
+export default CallController;

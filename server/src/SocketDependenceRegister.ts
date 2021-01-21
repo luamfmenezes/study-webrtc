@@ -4,7 +4,7 @@ import IUseSocket from "./models/IUseSocket";
 type IRegisterDependenceFunction = (data: ISocket) => void;
 
 class SocketDependenceRegister implements IUseSocket {
-  registers: IRegisterDependenceFunction[];
+  registers: IRegisterDependenceFunction[] = [];
 
   public registerDependece(register: IRegisterDependenceFunction) {
     this.registers.push(register);

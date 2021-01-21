@@ -8,9 +8,10 @@ interface ISocketRoute {
 }
 
 class SocketRouter implements IUseSocket {
-  public routes: ISocketRoute[];
+  public routes: ISocketRoute[] = [];
 
   public channel(name: string, route: string, Controller: any) {
+    console.log(Controller);
     this.routes.push({ name, route, Controller });
   }
 
@@ -21,7 +22,7 @@ class SocketRouter implements IUseSocket {
   public execute(Socket: ISocket) {
     this.routes.forEach((route) => {
       const socket = Socket.io.of(route.route);
-      const { Controller } = route.Controller;
+      const { Controller } = route;
       new Controller(socket);
     });
   }

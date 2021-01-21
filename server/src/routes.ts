@@ -1,8 +1,8 @@
 import socket from "./Socket";
-import ChatController from "./controllers/CallController";
+import CallController from "./controllers/CallController";
 
 const router = socket.createRouter();
 
-router.channel("chat", "/chat", ChatController);
+router.channel("chat", "/chat", CallController);
 
 export default router;

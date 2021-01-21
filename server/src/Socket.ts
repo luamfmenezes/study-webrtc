@@ -13,6 +13,7 @@ interface IChannelDTO {
 class Socket implements ISocket {
   public io: Server;
   public channels: IChannelDTO[] = [];
+  private useSockets: IUseSocket[] = [];
 
   // --- Channel Approach
 
@@ -20,7 +21,7 @@ class Socket implements ISocket {
     return this.io.of(name);
   }
 
-  public channel(name, route, Controller) {
+  public channel(name: string, route: string, Controller: any) {
     this.channels.push({ name, route, Controller });
   }
 
@@ -50,8 +51,14 @@ class Socket implements ISocket {
     });
   }
 
-  public use(Router: IUseSocket) {
-    Router.execute(this);
+  public use(useSocket: IUseSocket) {
+    this.useSockets.push(useSocket);
+  }
+
+  private configUses() {
+    this.useSockets.forEach((useSocket) => {
+      useSocket.execute(this);
+    });
   }
 
   // --- Listen
@@ -59,6 +66,7 @@ class Socket implements ISocket {
   public listen(server: any, port: number) {
     this.io = new Server(server);
     this.io.listen(port);
+    this.configUses();
   }
 }
 

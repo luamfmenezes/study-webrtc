@@ -37,7 +37,7 @@ export class Server {
   }
 
   public listen(callback: (port: number) => void): void {
-    this.io.listen(this.httpServer, this.DEFAULT_PORT);
+    this.io.listen(this.httpServer, 5555);
     this.httpServer.listen(this.DEFAULT_PORT, () =>
       callback(this.DEFAULT_PORT)
     );
