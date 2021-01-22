@@ -18,7 +18,7 @@ interface IAnswerMade {
   answer: RTCSessionDescriptionInit;
 }
 
-const user = `user:${Math.random()}`;
+const user = `user:${(Math.random() * 100).toFixed(0)}`;
 
 const socket = socketIo.connect("http://localhost:5555/chat", {
   query: { user },
@@ -29,11 +29,6 @@ const Call: React.FC = () => {
   const isAlreadyCalling = useRef(false);
   const video1Ref = useRef<HTMLVideoElement>(null);
   const video2Ref = useRef<HTMLVideoElement>(null);
-  const [ringing, setRinging] = useState({
-    status: false,
-    offer: undefined,
-    user: undefined,
-  });
 
   useEffect(() => {
     navigator.getUserMedia(
@@ -54,16 +49,6 @@ const Call: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    peerConnection.ontrack = function ({ streams: [stream] }) {
-      console.log(`stream`);
-      const remoteVideo = video2Ref.current;
-      if (remoteVideo) {
-        remoteVideo.srcObject = stream;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     socket.on("connected", async () => {
       console.log("connected");
     });
@@ -74,23 +59,42 @@ const Call: React.FC = () => {
 
     // recivieng a call
     socket.on("call-made", async (data: any) => {
-      setRinging({ status: true, offer: data.offer, user: data.user });
+      console.log("2.recive offer from:" + data.user);
+
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(data.offer)
+      );
+      const answer = await peerConnection.createAnswer();
+
+      await peerConnection.setLocalDescription(
+        new RTCSessionDescription(answer)
+      );
+
+      socket.emit("make-answer", {
+        answer,
+        to: data.user,
+      });
     });
 
     socket.on("answer-made", async (data: IAnswerMade) => {
+      // set foregin video
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(data.answer)
       );
-      if (!isAlreadyCalling.current) {
-        handleCall(data.user);
-        isAlreadyCalling.current = true;
-      }
+
+      console.log("recive anwser:" + data.user);
+
+      // if (!isAlreadyCalling.current) {
+      //   handleCall(data.user);
+      //   isAlreadyCalling.current = true;
+      // }
     });
   }, []);
 
   useEffect(() => {
     peerConnection.ontrack = function ({ streams: [stream] }) {
       const remoteVideo = video2Ref.current;
+      console.log(stream);
       if (remoteVideo) {
         remoteVideo.srcObject = stream;
       }
@@ -98,32 +102,19 @@ const Call: React.FC = () => {
   }, []);
 
   const handleCall = async (user: string) => {
+    console.log("1.send offer to: " + user);
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(new RTCSessionDescription(offer));
+    // set local video
     socket.emit("call-user", {
       offer,
       to: user,
     });
   };
 
-  const anwserCall = async () => {
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(ringing.offer)
-    );
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(new RTCSessionDescription(answer));
-    socket.emit("make-answer", {
-      answer,
-      to: ringing.user,
-    });
-  };
-
-  const recuseCall = () => {
-    setRinging({ status: false, offer: undefined, user: undefined });
-  };
-
   return (
     <Container>
+      <h1>user:{user}</h1>
       <Users>
         {users.map((user) => (
           <User key={user} onClick={() => handleCall(user)}>
@@ -132,14 +123,8 @@ const Call: React.FC = () => {
         ))}
       </Users>
       <Content>
-        <Video1 ref={video1Ref} autoPlay muted />
-        <Video2 ref={video2Ref} autoPlay muted />
-        {ringing.status && (
-          <>
-            <button onClick={recuseCall}>recuse</button>
-            <button onClick={anwserCall}>{ringing.user} is calling</button>
-          </>
-        )}
+        <Video1 ref={video1Ref} playsInline autoPlay muted />
+        <Video2 ref={video2Ref} playsInline autoPlay muted />
       </Content>
     </Container>
   );

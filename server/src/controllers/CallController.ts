@@ -32,6 +32,7 @@ class CallController {
       socket.broadcast.emit("online-users", users);
 
       socket.on("call-user", (data: ICallUser) => {
+        console.log(`call from: ${user}, to: ${data.to}`);
         namespace.to(`user:${data.to}`).emit("call-made", {
           offer: data.offer,
           user,
@@ -39,8 +40,9 @@ class CallController {
       });
 
       socket.on("make-answer", (data: IMakeAnswer) => {
+        console.log(`answer from: ${user}, to: ${data.to}`);
         namespace.to(`user:${data.to}`).emit("answer-made", {
-          user: user,
+          user,
           answer: data.answer,
         });
       });

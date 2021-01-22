@@ -1,6 +1,6 @@
 import express, { Application } from "express";
-import { Server as SocketIOServer } from "socket.io";
 import { createServer, Server as HTTPServer } from "http";
+import Socket from "./Socket";
 import cors from "cors";
 
 interface ICallUser {
