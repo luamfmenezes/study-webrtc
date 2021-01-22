@@ -1,6 +1,6 @@
-import socketIo from "socket.io";
+import socketIo, { Server } from "socket.io";
 
-let activeSockets: string[] = [];
+let users: string[] = [];
 
 interface ICallUser {
   to: string;
@@ -13,37 +13,40 @@ interface IMakeAnswer {
 }
 
 class CallController {
-  constructor(private namespace: socketIo.Namespace) {
+  constructor(namespace: socketIo.Namespace) {
     namespace.on("connection", (socket) => {
-      console.log("connected", socket.id);
+      const user = socket.handshake.query.user;
 
-      socket.emit("update-user-list", {
-        users: activeSockets,
-      });
+      const isOnline = users.find((currentUser) => currentUser === user);
 
-      socket.broadcast.emit("update-user-list", {
-        users: activeSockets,
-      });
+      if (!isOnline) {
+        users.push(user);
+      }
+
+      socket.join(`user:${user}`);
+
+      socket.emit("connected", "hi");
+
+      socket.emit("online-users", users);
+
+      socket.broadcast.emit("online-users", users);
 
       socket.on("call-user", (data: ICallUser) => {
-        socket.to(data.to).emit("call-made", {
+        namespace.to(`user:${data.to}`).emit("call-made", {
           offer: data.offer,
-          socket: socket.id,
+          user,
         });
       });
 
       socket.on("make-answer", (data: IMakeAnswer) => {
-        socket.to(data.to).emit("answer-made", {
-          socket: socket.id,
+        namespace.to(`user:${data.to}`).emit("answer-made", {
+          user: user,
           answer: data.answer,
         });
       });
 
       socket.on("disconnect", () => {
-        console.log("disconnected", socket.id);
-        activeSockets = activeSockets.filter(
-          (existingSocket) => existingSocket !== socket.id
-        );
+        users = users.filter((currentUser) => currentUser !== user);
       });
     });
   }

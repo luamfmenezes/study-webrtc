@@ -65,7 +65,13 @@ class Socket implements ISocket {
 
   public listen(server: any, port: number) {
     this.io = new Server(server);
-    this.io.listen(port);
+    this.io.listen(port, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+      },
+    });
+    console.log("socket connected");
     this.configUses();
   }
 }

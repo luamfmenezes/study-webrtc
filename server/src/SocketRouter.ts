@@ -24,6 +24,7 @@ class SocketRouter implements IUseSocket {
       const socket = Socket.io.of(route.route);
       const { Controller } = route;
       new Controller(socket);
+      console.log(`Register ${route.route}`);
     });
   }
 }
