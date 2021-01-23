@@ -1,4 +1,4 @@
-import socket from "./Socket";
+import socket from "./socket/Socket";
 import CallController from "./controllers/CallController";
 
 const router = socket.createRouter();

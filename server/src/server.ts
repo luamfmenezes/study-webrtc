@@ -1,6 +1,6 @@
 import express, { Application } from "express";
 import { createServer, Server as HTTPServer } from "http";
-import Socket from "./Socket";
+import Socket from "./socket/Socket";
 import cors from "cors";
 import ISocket from "./models/ISocket";
 import socketRoutes from "./routes";
