@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Container, Users, User, Content, Video1, Video2 } from "./styles";
 import socketIo from "socket.io-client";
 const { RTCPeerConnection, RTCSessionDescription } = window;
@@ -6,27 +6,9 @@ const peerConnection = new RTCPeerConnection({
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 });
 
-interface ICallUser {
-  offer: RTCSessionDescriptionInit;
-  socket: string;
-}
-
-interface IUpdateList {
-  users: string[];
-}
-
-interface IAnswerMade {
-  user: string;
-  answer: RTCSessionDescriptionInit;
-}
-
-interface IRecivingCall {
-  status?: string;
-  user?: string;
-  offer?: RTCSessionDescriptionInit;
-}
-
-const user = `user:${(Math.random() * 100).toFixed(0)}`;
+const user = window.location.pathname.split("/")[
+  window.location.pathname.split("/").length - 1
+];
 
 const socket = socketIo.connect("http://localhost:5555/chat", {
   query: { user },
@@ -34,10 +16,14 @@ const socket = socketIo.connect("http://localhost:5555/chat", {
 
 const Call: React.FC = () => {
   const [users, setUsers] = useState<string[]>([]);
-  const [recivingCall, setRecivingCall] = useState<IRecivingCall>({});
-  const isAlreadyCalling = useRef(false);
   const video1Ref = useRef<HTMLVideoElement>(null);
   const video2Ref = useRef<HTMLVideoElement>(null);
+  const [isRecivingCall, setIsRecivingCall] = useState({
+    status: false,
+    offer: undefined,
+    user: undefined,
+  });
+  // const isAlreadyCalling = useRef(false);
 
   useEffect(() => {
     navigator.getUserMedia(
@@ -63,19 +49,22 @@ const Call: React.FC = () => {
     });
 
     // recivieng a call
-    socket.on("call-made", async (data: any) => {
-      setRecivingCall({ status: true, ...data });
+    socket.on("order", async (data: any) => {
+      console.log("2.recive offer from:" + data.user);
+      setIsRecivingCall({ status: true, offer: data.offer, user: data.user });
     });
 
-    socket.on("answer-made", async (data: IAnswerMade) => {
+    socket.on("answer", async (data: any) => {
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(data.answer)
       );
 
-      if (!isAlreadyCalling.current) {
-        handleCall(data.user);
-        isAlreadyCalling.current = true;
-      }
+      console.log(peerConnection);
+
+      // if (!isAlreadyCalling.current) {
+      //   handleCall(data.user);
+      //   isAlreadyCalling.current = true;
+      // }
     });
   }, []);
 
@@ -91,26 +80,40 @@ const Call: React.FC = () => {
   const handleCall = async (user: string) => {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(new RTCSessionDescription(offer));
-    socket.emit("call-user", {
+    socket.emit("send-order", {
       offer,
       to: user,
     });
   };
 
-  const answerCall = async () => {
+  const handleAcceptCall = useCallback(async () => {
     await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(recivingCall.offer)
+      new RTCSessionDescription(isRecivingCall.offer)
     );
 
     const answer = await peerConnection.createAnswer();
 
     await peerConnection.setLocalDescription(new RTCSessionDescription(answer));
 
-    socket.emit("make-answer", {
+    console.log(peerConnection);
+
+    socket.emit("send-answer", {
       answer,
-      to: recivingCall.user,
+      to: isRecivingCall.user,
     });
-  };
+  }, [isRecivingCall]);
+
+  // useEffect(() => {
+  //   peerConnection.onicecandidate = function (event) {
+  //     console.log(event.target);
+  //     console.log(peerConnection.signalingState);
+  //     // if (peerConnection.canTrickleIceCandidates) {
+  //     //   if (isRecivingCall.status) {
+  //     //     handleAcceptCall();
+  //     //   }
+  //     // }
+  //   };
+  // }, [isRecivingCall]);
 
   return (
     <Container>
@@ -125,8 +128,10 @@ const Call: React.FC = () => {
       <Content>
         <Video1 ref={video1Ref} playsInline autoPlay muted />
         <Video2 ref={video2Ref} playsInline autoPlay muted />
-        {recivingCall.status && (
-          <button onClick={answerCall}>Aceitar ligação</button>
+        {isRecivingCall.status && (
+          <button onClick={handleAcceptCall}>
+            atender {isRecivingCall.user}
+          </button>
         )}
       </Content>
     </Container>

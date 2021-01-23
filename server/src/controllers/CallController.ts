@@ -1,15 +1,24 @@
-import socketIo, { Server } from "socket.io";
+import socketIo from "socket.io";
 
 let users: string[] = [];
 
-interface ICallUser {
-  to: string;
-  offer: string;
+interface ISendOrder {
+  target: string;
+  description: any;
 }
 
-interface IMakeAnswer {
-  to: string;
-  answer: string;
+interface ISendAnswer {
+  target: string;
+  description: any;
+}
+
+interface IIceCandidate {
+  target: string;
+  candidate: string;
+}
+
+interface IClose {
+  target: string;
 }
 
 class CallController {
@@ -23,28 +32,37 @@ class CallController {
         users.push(user);
       }
 
-      socket.join(`user:${user}`);
+      console.log("connected");
 
-      socket.emit("connected", "hi");
+      socket.join(`user:${user}`);
 
       socket.emit("online-users", users);
 
       socket.broadcast.emit("online-users", users);
 
-      socket.on("call-user", (data: ICallUser) => {
-        console.log(`call from: ${user}, to: ${data.to}`);
-        namespace.to(`user:${data.to}`).emit("call-made", {
-          offer: data.offer,
-          user,
+      socket.on("send-offer", (data: ISendOrder) => {
+        namespace.to(`user:${data.target}`).emit("offer", {
+          description: data.description,
+          caller: user,
         });
       });
 
-      socket.on("make-answer", (data: IMakeAnswer) => {
-        console.log(`answer from: ${user}, to: ${data.to}`);
-        namespace.to(`user:${data.to}`).emit("answer-made", {
-          user,
-          answer: data.answer,
+      socket.on("send-answer", (data: ISendAnswer) => {
+        namespace.to(`user:${data.target}`).emit("answer", {
+          description: data.description,
+          caller: user,
         });
+      });
+
+      socket.on("send-icecandidate", (data: IIceCandidate) => {
+        namespace.to(`user:${data.target}`).emit("icecandidate", {
+          caller: user,
+          candidate: data.candidate,
+        });
+      });
+
+      socket.on("send-close", (data: IClose) => {
+        namespace.to(`user:${user}`).to(`user:${data.target}`).emit("close");
       });
 
       socket.on("disconnect", () => {
