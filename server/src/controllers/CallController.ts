@@ -32,8 +32,6 @@ class CallController {
         users.push(user);
       }
 
-      console.log("connected");
-
       socket.join(`user:${user}`);
 
       socket.emit("online-users", users);

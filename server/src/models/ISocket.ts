@@ -1,5 +1,4 @@
 import { Namespace, Server } from "socket.io";
-import SocketRouter from "../SocketRouter";
 import IUseSocket from "./IUseSocket";
 
 interface IChannelDTO {
@@ -11,11 +10,11 @@ interface IChannelDTO {
 export default interface ISocket {
   io: Server;
   channels: IChannelDTO[];
+  // channel(name: string, route: string, Controller: any): void;
+  // registerChannels(): void;
   getChannel(name: string): Namespace | undefined;
-  channel(name: string, route: string, Controller: any): void;
-  registerChannels(): void;
-  createRouter(): void;
-  useRouter(Router: SocketRouter): void;
+  createRouter(): IUseSocket;
+  createDependeceRegister(): IUseSocket;
   use(Router: IUseSocket): void;
   listen(server: any, port: number): void;
 }
