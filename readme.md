@@ -1,5 +1,5 @@
 <h1 align="center">
-    <a href="https://pt-br.reactjs.org/">📽 Video call app </a>
+ 📽 Video call app
 </h1>
 <p align="center">🚀 Proof of concept for a video call micro-service using WebRTC, WebSockets and React.</p>
   
