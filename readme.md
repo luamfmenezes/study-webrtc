@@ -5,7 +5,7 @@
   
 ## Description
 
-The objective of the project was to test the performace and propose some architectures to create the base of a videoCall service.
+The objective of the project was to test the performance and propose some architectures to create the base of a videoCall service.
 
 ## Preview
 
