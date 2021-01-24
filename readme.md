@@ -14,7 +14,7 @@ The objective of the project was to test the performance and propose some archit
 ## Installing and running the application
 ```bash
 # First clone the repository
-$ git clone <https://github.com/tgmarinho/nlw1>
+$ git clone https://github.com/luamfmenezes/study-webrtc
 ```
 ### 🎲 Runing the backend (Server).
 
@@ -33,7 +33,7 @@ $ yarn dev
 # or
 $ npm run dev
 
-# The server will run on Port: 3333 - access <http://localhost:3333>
+# The server will run on Port: 3333 - access http://localhost:3333
 ```
 
 ### 🎲 Runing the frontend (Web).
@@ -53,5 +53,5 @@ $ yarn start
 # or
 $ npm start
 
-# The app will run on Port: 3000 - access <http://localhost:3000> usign a browser.
+# The app will run on Port: 3000 - access http://localhost:3000 usign a browser.
 ```
