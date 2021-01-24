@@ -2,12 +2,14 @@
     <a href="https://pt-br.reactjs.org/">📽 Video call app </a>
 </h1>
 <p align="center">🚀 Proof of concept for a video call micro-service using WebRTC, WebSockets and React.</p>
-
+  
 ## Description
 
 The objective of the project was to test the performace and propose some architectures to create the base of a videoCall service.
 
 ## Preview
+
+<img src="webrtcpreview.gif" data-canonical-src="webrtcpreview.gif" width="500" />
 
 ## Installing and running the application
 ```bash
