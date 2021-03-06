@@ -45,7 +45,7 @@ class Socket implements ISocket {
         methods: ["GET", "POST"],
       },
     });
-    console.log("socket connected");
+    console.log("socket listen on port: " + port);
     this.configUses();
   }
 }
