@@ -34,11 +34,14 @@ class CallController {
 
       socket.join(`user:${user}`);
 
+      console.log("user: " + user);
+
       socket.emit("online-users", users);
 
       socket.broadcast.emit("online-users", users);
 
       socket.on("send-offer", (data: ISendOrder) => {
+        console.log(`send-offer -> from:${user} , to:${data.target} `);
         namespace.to(`user:${data.target}`).emit("offer", {
           description: data.description,
           caller: user,
@@ -46,6 +49,7 @@ class CallController {
       });
 
       socket.on("send-answer", (data: ISendAnswer) => {
+        console.log(`send-answer -> from:${user} , to:${data.target} `);
         namespace.to(`user:${data.target}`).emit("answer", {
           description: data.description,
           caller: user,

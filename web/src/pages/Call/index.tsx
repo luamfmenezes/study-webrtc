@@ -18,7 +18,7 @@ const user = window.location.pathname.split("/")[
   window.location.pathname.split("/").length - 1
 ];
 
-const socket = socketIo.connect("http://localhost:5555/chat", {
+const socket = socketIo("http://10.0.0.108:5555/chat", {
   query: { user },
 });
 
@@ -53,6 +53,8 @@ const Call: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    socket.connect();
+
     socket.on("connected", async () => {
       console.log("connected");
     });
