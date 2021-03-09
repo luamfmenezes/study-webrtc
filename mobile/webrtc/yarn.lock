@@ -6955,6 +6955,13 @@ react-native-gesture-handler@~1.8.0:
     invariant "^2.2.4"
     prop-types "^15.7.2"
 
+react-native-onesignal@^4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/react-native-onesignal/-/react-native-onesignal-4.0.5.tgz#d3a3b23b401e8e1f065d9af0941f6f26f21018e5"
+  integrity sha512-clDuRYKuyiMRBizgCN9EqyLWpZhVJPgcl9o7SCRUokot1Cg3Lsh1IMdpzqKh4HfPKaoj3sYC0XQtWAn9OhBw3w==
+  dependencies:
+    invariant "^2.2.2"
+
 react-native-reanimated@~1.13.0:
   version "1.13.2"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-1.13.2.tgz#1ae5457b24b4913d173a5a064bb28eae7783d293"

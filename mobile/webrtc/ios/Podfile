@@ -21,4 +21,6 @@ target 'webrtc' do
   # post_install do |installer|
   #    flipper_post_install(installer)
   # end
+  pod 'react-native-onesignal', :path => '../node_modules/react-native-onesignal'
+
 end
