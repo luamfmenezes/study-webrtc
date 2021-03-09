@@ -1,18 +1,20 @@
 <h1 align="center">
-    <a href="https://pt-br.reactjs.org/">📽 Video call app </a>
+ 📽 Video call app
 </h1>
 <p align="center">🚀 Proof of concept for a video call micro-service using WebRTC, WebSockets and React.</p>
-
+  
 ## Description
 
-The objective of the project was to test the performace and propose some architectures to create the base of a videoCall service.
+The objective of this project was to test the performance and propose some architectures to create the base of a videoCall service.
 
 ## Preview
+
+<img src="webrtcpreview.gif" data-canonical-src="webrtcpreview.gif" width="500" />
 
 ## Installing and running the application
 ```bash
 # First clone the repository
-$ git clone <https://github.com/tgmarinho/nlw1>
+$ git clone https://github.com/luamfmenezes/study-webrtc
 ```
 ### 🎲 Runing the backend (Server).
 
@@ -31,7 +33,7 @@ $ yarn dev
 # or
 $ npm run dev
 
-# The server will run on Port: 3333 - access <http://localhost:3333>
+# The server will run on Port: 3333 - access http://localhost:3333
 ```
 
 ### 🎲 Runing the frontend (Web).
@@ -51,5 +53,5 @@ $ yarn start
 # or
 $ npm start
 
-# The app will run on Port: 3000 - access <http://localhost:3000> usign a browser.
+# The app will run on Port: 3000 - access http://localhost:3000 usign a browser.
 ```
