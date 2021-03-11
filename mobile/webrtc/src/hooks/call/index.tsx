@@ -1,33 +1,48 @@
-import React, { useRef, useEffect, useState } from "react";
-import { Text } from "react-native";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+} from "react";
 import socketIo from "socket.io-client";
 import {
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
-  RTCView,
-  MediaStream,
-  MediaStreamTrack,
-  mediaDevices,
-  registerGlobals,
-  MediaTrackConstraints,
   RTCSessionDescriptionType,
 } from "react-native-webrtc";
-import { TouchableOpacity } from "react-native-gesture-handler";
-const configuration = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
-const peerConnection = new RTCPeerConnection(configuration);
 
-// import { Container } from './styles';
+const configuration = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
+
+const peerConnection = new RTCPeerConnection(configuration);
 
 const socket = socketIo("http://10.0.0.108:5555/chat", {
   query: { user: "luam-mobile" },
 });
 
-const isFront = true;
+interface IisRecivingCall {
+  caller: string;
+  description: any;
+  status: boolean;
+}
 
-const Call: React.FC = () => {
-  const [users, setUsers] = useState<string[]>([]);
-  const [stream, setSteam] = useState<any>();
+interface ICallContext {
+  stream: MediaStream | boolean;
+  remoteStream: MediaStream | boolean;
+  isOnCall: boolean;
+  isRecivingCall: IisRecivingCall;
+  handleCall: (user: string) => void;
+  handleAnswerCall: () => void;
+  handleCloseCall: () => void;
+  handleRecuseCall: () => void;
+  setStream: React.Dispatch<any>;
+}
+
+const CallContext = createContext<ICallContext>({} as ICallContext);
+
+const CallProvider: React.FC = ({ children }) => {
+  const [stream, setStream] = useState<any>();
   const [remoteStream, setRemoteStream] = useState<any>();
   const [isOnCall, setIsOnCall] = useState(false);
   const [isRecivingCall, setIsRecivingCall] = useState({
@@ -38,47 +53,6 @@ const Call: React.FC = () => {
   const otherUser = useRef("");
 
   useEffect(() => {
-    mediaDevices.enumerateDevices().then((sourceInfos) => {
-      let videoSourceId;
-      for (let i = 0; i < sourceInfos.length; i++) {
-        const sourceInfo = sourceInfos[i];
-        if (
-          sourceInfo.kind == "videoinput" &&
-          sourceInfo.facing == (isFront ? "front" : "environment")
-        ) {
-          videoSourceId = sourceInfo.deviceId;
-        }
-      }
-      mediaDevices
-        .getUserMedia({
-          audio: true,
-          video: {
-            mandatory: {
-              minWidth: 640,
-              minHeight: 480,
-              minFrameRate: 30,
-            },
-            facingMode: isFront ? "user" : "environment",
-            optional: [
-              {
-                sourceId: videoSourceId,
-              },
-            ],
-          },
-        })
-        .then((stream) => {
-          setSteam(stream);
-          if (typeof stream !== "boolean") {
-            peerConnection.addStream(stream);
-          }
-        })
-        .catch((error: any) => {
-          // Log error
-        });
-    });
-  }, []);
-
-  useEffect(() => {
     socket.connect();
 
     socket.on("connected", async () => {
@@ -87,10 +61,6 @@ const Call: React.FC = () => {
 
     socket.on("disconnect", () => {
       console.log("disconnect");
-    });
-
-    socket.on("online-users", (data: string[]) => {
-      setUsers(data.filter((el) => el !== "luam-mobile"));
     });
 
     socket.on("offer", async (data: any) => {
@@ -118,7 +88,7 @@ const Call: React.FC = () => {
 
   useEffect(() => {
     peerConnection.onicecandidate = function (event) {
-      console.log(event.candidate);
+      console.log("seng Ice candidate");
       if (event.candidate && otherUser.current) {
         socket.emit("send-icecandidate", {
           target: otherUser.current,
@@ -126,7 +96,7 @@ const Call: React.FC = () => {
         });
       }
     };
-  }, [otherUser]);
+  }, []);
 
   useEffect(() => {
     peerConnection.onconnectionstatechange = function (event) {
@@ -171,35 +141,41 @@ const Call: React.FC = () => {
     }
   };
 
-  const handleCloseCall = async () => {
-    window.location.reload();
-  };
+  const handleCloseCall = async () => {};
 
   const handleRecuseCall = async () => {
     setIsRecivingCall({ status: false, description: {}, caller: "" });
   };
 
   return (
-    <>
-      {isRecivingCall.status && (
-        <TouchableOpacity onPress={handleAnswerCall}>
-          <Text>AcceptCall from {isRecivingCall.caller}</Text>
-        </TouchableOpacity>
-      )}
-      {stream && (
-        <RTCView
-          streamURL={stream.toURL()}
-          style={{ flex: 1, width: 648, height: 480 }}
-        />
-      )}
-      {remoteStream && (
-        <RTCView
-          streamURL={remoteStream.toURL()}
-          style={{ flex: 1, width: 648, height: 480 }}
-        />
-      )}
-    </>
+    <CallContext.Provider
+      value={{
+        stream,
+        remoteStream,
+        isOnCall,
+        isRecivingCall,
+        handleCall,
+        handleAnswerCall,
+        handleCloseCall,
+        handleRecuseCall,
+        setStream,
+      }}
+    >
+      {children}
+    </CallContext.Provider>
   );
 };
 
-export default Call;
+const useCall = (): ICallContext => {
+  const context = useContext(CallContext);
+
+  if (!context) {
+    throw new Error(
+      "You should execute this hook only inside of one react component"
+    );
+  }
+
+  return context;
+};
+
+export { useCall, CallProvider };

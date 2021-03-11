@@ -1,22 +1,18 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import Call from "./src/components/Call";
+import { NavigationContainer } from "@react-navigation/native";
+import Routes from "./src/routes";
 import Notification from "./src/components/Notification";
+import { CallProvider } from "./src/hooks/call";
+import Call from "./src/components/Call";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Call />
-      <Notification />
-    </View>
+    <NavigationContainer>
+      <CallProvider>
+        <Notification />
+        {/* <Routes /> */}
+        <Call />
+      </CallProvider>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

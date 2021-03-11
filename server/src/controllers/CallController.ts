@@ -57,6 +57,7 @@ class CallController {
       });
 
       socket.on("send-icecandidate", (data: IIceCandidate) => {
+        console.log(`send-icecandidate -> from:${user} , to:${data.target} `);
         namespace.to(`user:${data.target}`).emit("icecandidate", {
           caller: user,
           candidate: data.candidate,

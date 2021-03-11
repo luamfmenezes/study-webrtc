@@ -11,7 +11,7 @@ const externalUserId = "luam-fmenezes";
 
 const Notification = () => {
   useEffect(() => {
-    console.log("here");
+    console.log("Notification initialized");
 
     OneSignal.setAppId("66fd6f02-0d9a-46bd-ba2a-2f1ce93060e3");
 
@@ -35,7 +35,7 @@ const Notification = () => {
     });
   }, []);
 
-  return <Text>Test 2</Text>;
+  return null;
 };
 
 export default Notification;
