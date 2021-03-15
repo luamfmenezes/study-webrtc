@@ -7108,6 +7108,11 @@ react-native-onesignal@^4.0.5:
   dependencies:
     invariant "^2.2.2"
 
+react-native-peerjs@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/react-native-peerjs/-/react-native-peerjs-1.0.4.tgz#94df5bf13b1ab6373bc123fc6d1109840f67fd78"
+  integrity sha512-Z3pPtV6B0tiW8TiRXBtyUwWBAi+sYz2/bMaae07zkBogEnF2PzwFlK9+eZZbJHSVeRohtDE9RnED5Q6QI07TFg==
+
 react-native-reanimated@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-2.0.0.tgz#0eb2f196e8fde23cf918530074134177aaee8702"

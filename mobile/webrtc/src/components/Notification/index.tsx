@@ -23,15 +23,15 @@ const Notification = () => {
 
       const { actionId = "default" }: IAction = action;
 
-      console.log(id, actionId, data);
+      // console.log(id, actionId, data);
     });
 
     OneSignal.setNotificationOpenedHandler(() => {
-      console.log("paralele event");
+      // console.log("paralele event");
     });
 
     OneSignal.setExternalUserId(externalUserId, (results) => {
-      console.log("user-id: ", results);
+      // console.log("user-id: ", results);
     });
   }, []);
 

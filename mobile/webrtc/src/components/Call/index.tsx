@@ -13,29 +13,23 @@ import {
   MediaTrackConstraints,
   RTCSessionDescriptionType,
 } from "react-native-webrtc";
-import { TouchableOpacity } from "react-native-gesture-handler";
-const configuration = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
-const peerConnection = new RTCPeerConnection(configuration);
+import Peer from "react-native-peerjs";
 
-// import { Container } from './styles';
-
-const socket = socketIo("http://10.0.0.108:5555/chat", {
-  query: { user: "luam-mobile" },
+const socket = socketIo("http://10.0.0.108:5555/rooms", {
+  query: { username: "mobile-user" },
 });
 
 const isFront = true;
 
+interface IPeer {
+  id: string;
+  stream: MediaStream;
+}
+
 const Call: React.FC = () => {
-  const [users, setUsers] = useState<string[]>([]);
-  const [stream, setSteam] = useState<any>();
-  const [remoteStream, setRemoteStream] = useState<any>();
-  const [isOnCall, setIsOnCall] = useState(false);
-  const [isRecivingCall, setIsRecivingCall] = useState({
-    caller: "",
-    description: {},
-    status: false,
-  });
-  const otherUser = useRef("");
+  const [localVideo, setLocalVideo] = useState<any>();
+  const [peers, setPeers] = useState<IPeer[]>([]);
+  const peerCallObj = useRef<any>({});
 
   useEffect(() => {
     mediaDevices.enumerateDevices().then((sourceInfos) => {
@@ -67,137 +61,70 @@ const Call: React.FC = () => {
           },
         })
         .then((stream) => {
-          setSteam(stream);
-          if (typeof stream !== "boolean") {
-            peerConnection.addStream(stream);
-          }
+          setLocalVideo(stream);
+
+          const myPeer = new Peer(undefined, {
+            host: "10.0.0.108",
+            port: 9000,
+            secure: false,
+            path: "/myapp",
+          });
+
+          myPeer.on("open", (peerId: any) => {
+            console.log("here2");
+            socket.emit("join-room", { peerId });
+          });
+
+          socket.on("users-connected", (users: any[]) => {
+            console.log("users", users);
+
+            users.forEach(({ peerId }) => {
+              const call = myPeer.call(peerId, stream);
+
+              call.on("stream", (stream: any) =>
+                addPeer({ id: peerId, stream })
+              );
+
+              // close is not working
+              call.on("close", () => {
+                console.log("close", peerId);
+                setPeers((oldPeers) =>
+                  oldPeers.filter((el) => el.id !== peerId)
+                );
+              });
+
+              peerCallObj.current[peerId] = call;
+            });
+          });
         })
         .catch((error: any) => {
-          // Log error
+          console.log(error);
         });
     });
   }, []);
 
-  useEffect(() => {
-    socket.connect();
-
-    socket.on("connected", async () => {
-      console.log("connected");
+  const addPeer = (peer: IPeer) => {
+    setPeers((oldPeers) => {
+      const exist = oldPeers.map((el) => el.id).includes(peer.id);
+      return exist ? oldPeers : [...oldPeers, peer];
     });
-
-    socket.on("disconnect", () => {
-      console.log("disconnect");
-    });
-
-    socket.on("online-users", (data: string[]) => {
-      setUsers(data.filter((el) => el !== "luam-mobile"));
-    });
-
-    socket.on("offer", async (data: any) => {
-      setIsRecivingCall({ status: true, ...data });
-      otherUser.current = data.caller;
-    });
-
-    socket.on("answer", async (data: any) => {
-      await peerConnection.setRemoteDescription(data.description);
-    });
-
-    socket.on("icecandidate", async (data: any) => {
-      const candidate = new RTCIceCandidate(data.candidate);
-      peerConnection
-        .addIceCandidate(candidate)
-        .catch((e: string) => console.log(e));
-    });
-  }, []);
-
-  useEffect(() => {
-    peerConnection.onaddstream = function (event) {
-      setRemoteStream(event.stream);
-    };
-  }, []);
-
-  useEffect(() => {
-    peerConnection.onicecandidate = function (event) {
-      console.log(event.candidate);
-      if (event.candidate && otherUser.current) {
-        socket.emit("send-icecandidate", {
-          target: otherUser.current,
-          candidate: event.candidate,
-        });
-      }
-    };
-  }, [otherUser]);
-
-  useEffect(() => {
-    peerConnection.onconnectionstatechange = function (event) {
-      console.log(event);
-      // if (peerConnection.iceConnectionState === "connected") {
-      //   setIsOnCall(true);
-      // }
-    };
-  }, []);
-
-  const handleCall = async (user: string) => {
-    const offer = await peerConnection.createOffer();
-
-    const offerDescription = new RTCSessionDescription(offer);
-
-    await peerConnection.setLocalDescription(offerDescription);
-
-    socket.emit("send-offer", {
-      description: offerDescription,
-      target: user,
-    });
-  };
-
-  const handleAnswerCall = async () => {
-    if (isRecivingCall.status) {
-      await peerConnection.setRemoteDescription(
-        isRecivingCall.description as RTCSessionDescriptionType
-      );
-
-      const answer = await peerConnection.createAnswer();
-
-      const answerDescription = new RTCSessionDescription(answer);
-
-      await peerConnection.setLocalDescription(answerDescription);
-
-      socket.emit("send-answer", {
-        description: answerDescription,
-        target: isRecivingCall.caller,
-      });
-
-      setIsRecivingCall({ status: false, description: {}, caller: "" });
-    }
-  };
-
-  const handleCloseCall = async () => {
-    window.location.reload();
-  };
-
-  const handleRecuseCall = async () => {
-    setIsRecivingCall({ status: false, description: {}, caller: "" });
   };
 
   return (
     <>
-      {isRecivingCall.status && (
-        <TouchableOpacity onPress={handleAnswerCall}>
-          <Text>AcceptCall from {isRecivingCall.caller}</Text>
-        </TouchableOpacity>
-      )}
-      {stream && (
+      {localVideo && (
         <RTCView
-          streamURL={stream.toURL()}
-          style={{ flex: 1, width: 648, height: 480 }}
+          streamURL={localVideo.toURL()}
+          style={{ flex: 1, width: 320, height: 280 }}
         />
       )}
-      {remoteStream && (
+      {peers.map((peer) => (
         <RTCView
-          streamURL={remoteStream.toURL()}
-          style={{ flex: 1, width: 648, height: 480 }}
+          key={peer.id}
+          streamURL={peer.stream.toURL()}
+          style={{ flex: 1, width: 320, height: 280 }}
         />
-      )}
+      ))}
     </>
   );
 };
