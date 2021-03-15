@@ -11,10 +11,15 @@ const socket = socketIo("http://10.0.0.108:5555/rooms", {
 
 socket.connect();
 
+interface IPeer {
+  id: string;
+  stream: MediaStream;
+}
+
 const Call: React.FC = () => {
   const [localVideo, setLocalVideo] = useState<MediaStream | undefined>();
-  const [peers, setPeers] = useState<MediaStream[]>([]);
-  const userCallObj = useRef<any>({});
+  const [peers, setPeers] = useState<IPeer[]>([]);
+  const peerCallObj = useRef<any>({});
 
   useEffect(() => {
     navigator.getUserMedia(
@@ -34,10 +39,9 @@ const Call: React.FC = () => {
 
         socket.on("users-connected", (users: any[]) => {
           users.forEach(({ peerId }) => {
-            console.log(peerId);
             const call = myPeer.call(peerId, stream);
 
-            call.on("stream", addPeer);
+            call.on("stream", (stream) => addPeer({ id: peerId, stream }));
 
             // close is not working
             call.on("close", () => {
@@ -45,24 +49,35 @@ const Call: React.FC = () => {
               setPeers((oldPeers) => oldPeers.filter((el) => el.id !== peerId));
             });
 
-            userCallObj.current[peerId] = call;
+            peerCallObj.current[peerId] = call;
           });
         });
 
         socket.on("user-disconnected", ({ peerId }: any) => {
-          if (userCallObj.current[peerId]) userCallObj.current[peerId].close();
+          if (peerCallObj.current[peerId]) peerCallObj.current[peerId].close();
         });
 
         myPeer.on("call", (call) => {
           call.answer(stream);
-          call.on("stream", addPeer);
+
+          const peerIdentity = call.peer;
+
+          peerCallObj.current[peerIdentity] = call;
+
+          call.on("stream", (stream) => addPeer({ id: peerIdentity, stream }));
+
+          call.on("close", () => {
+            setPeers((oldPeers) =>
+              oldPeers.filter((el) => el.id !== peerIdentity)
+            );
+          });
         });
       },
       () => {}
     );
   }, []);
 
-  const addPeer = (peer: MediaStream) => {
+  const addPeer = (peer: IPeer) => {
     setPeers((oldPeers) => {
       const exist = oldPeers.map((el) => el.id).includes(peer.id);
       return exist ? oldPeers : [...oldPeers, peer];
@@ -87,12 +102,12 @@ const Call: React.FC = () => {
           height={280}
         />
       )}
-      {peers.map((stream) => (
+      {peers.map((peer) => (
         <video
-          key={stream.id}
+          key={peer.id}
           ref={(video: any) => {
             if (video) {
-              video.srcObject = stream;
+              video.srcObject = peer.stream;
             }
           }}
           playsInline

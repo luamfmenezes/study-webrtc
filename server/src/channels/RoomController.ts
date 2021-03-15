@@ -10,7 +10,7 @@ let users: IUser[] = [];
 class CallController {
   constructor(namespace: socketIo.Namespace) {
     namespace.on("connection", (socket) => {
-      const username = socket.handshake.query.user;
+      const username = socket.handshake.query.username;
       let peerId = "";
 
       console.log(`connect user:${username}`);
