@@ -3,27 +3,18 @@ import { Container } from "./styles";
 import socketIo from "socket.io-client";
 import Peer, { MediaConnection } from "peerjs";
 
-const room = window.location.pathname.split("/")[
-  window.location.pathname.split("/").length - 1
-];
-
-const user = (Math.random() * 100).toFixed(0);
+const username = `web-user: ${(Math.random() * 100).toFixed(0)}`;
 
 const socket = socketIo("http://10.0.0.108:5555/rooms", {
-  query: { user, room },
+  query: { username },
 });
 
 socket.connect();
 
-const myPeer = new Peer({
-  host: "localhost",
-  port: 9000,
-  path: "/myapp",
-});
-
 const Call: React.FC = () => {
   const [localVideo, setLocalVideo] = useState<MediaStream | undefined>();
   const [peers, setPeers] = useState<MediaStream[]>([]);
+  const userCallObj = useRef<any>({});
 
   useEffect(() => {
     navigator.getUserMedia(
@@ -31,47 +22,54 @@ const Call: React.FC = () => {
       (stream) => {
         setLocalVideo(stream);
 
-        socket.on("user-connected", (userId: any) => {
-          const call = myPeer.call(userId, stream);
+        const myPeer = new Peer({
+          host: "localhost",
+          port: 9000,
+          path: "/myapp",
+        });
 
-          console.log("declare-on-stream", call);
+        myPeer.on("open", (peerId) => {
+          socket.emit("join-room", { peerId });
+        });
 
-          call.on("stream", (stream) => {
-            console.log("stream", stream);
-            setPeers((oldPeers) => [...oldPeers, stream]);
-          });
+        socket.on("users-connected", (users: any[]) => {
+          users.forEach(({ peerId }) => {
+            console.log(peerId);
+            const call = myPeer.call(peerId, stream);
 
-          call.on("close", () => {
-            setPeers((oldPeers) => oldPeers.filter((el) => el !== userId));
+            call.on("stream", addPeer);
+
+            // close is not working
+            call.on("close", () => {
+              console.log("close", peerId);
+              setPeers((oldPeers) => oldPeers.filter((el) => el.id !== peerId));
+            });
+
+            userCallObj.current[peerId] = call;
           });
         });
+
+        socket.on("user-disconnected", ({ peerId }: any) => {
+          if (userCallObj.current[peerId]) userCallObj.current[peerId].close();
+        });
+
+        myPeer.on("call", (call) => {
+          call.answer(stream);
+          call.on("stream", addPeer);
+        });
       },
-      (error) => {
-        console.warn(error.message);
-      }
+      () => {}
     );
   }, []);
 
-  useEffect(() => {
-    myPeer.on("open", (userId) => {
-      socket.emit("join-room", { room, userId });
+  const addPeer = (peer: MediaStream) => {
+    setPeers((oldPeers) => {
+      const exist = oldPeers.map((el) => el.id).includes(peer.id);
+      return exist ? oldPeers : [...oldPeers, peer];
     });
-  }, []);
+  };
 
-  useEffect(() => {
-    myPeer.on("call", (call) => {
-      navigator.getUserMedia(
-        { video: true, audio: true },
-        (stream) => {
-          call.answer(stream);
-        },
-        () => undefined
-      );
-      call.on("stream", (userVideoStream) => {
-        setPeers((oldPeers) => [...oldPeers, userVideoStream]);
-      });
-    });
-  }, []);
+  console.log(peers);
 
   return (
     <Container>
@@ -91,7 +89,7 @@ const Call: React.FC = () => {
       )}
       {peers.map((stream) => (
         <video
-          key={Math.random()}
+          key={stream.id}
           ref={(video: any) => {
             if (video) {
               video.srcObject = stream;

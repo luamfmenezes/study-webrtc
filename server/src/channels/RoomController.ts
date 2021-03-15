@@ -1,48 +1,35 @@
 import socketIo from "socket.io";
-import RoomRepository from "../repositories/RoomRepository";
 
-interface ISendOrder {
-  target: string;
-  description: any;
+interface IUser {
+  username: string;
+  peerId: string;
 }
 
-interface ISendAnswer {
-  target: string;
-  description: any;
-}
-
-interface IIceCandidate {
-  target: string;
-  candidate: string;
-}
-
-interface IClose {
-  target: string;
-}
+let users: IUser[] = [];
 
 class CallController {
   constructor(namespace: socketIo.Namespace) {
     namespace.on("connection", (socket) => {
-      const user = socket.handshake.query.user;
-      const roomId = socket.handshake.query.room;
-      const room = RoomRepository.findOne(roomId);
+      const username = socket.handshake.query.user;
+      let peerId = "";
 
-      console.log(`connect user:${user} at room:${roomId}`);
+      console.log(`connect user:${username}`);
 
       socket.on("join-room", (data: any) => {
-        // Verify if user can enter here
+        peerId = data.peerId;
 
-        console.log(data);
+        socket.join("room:default");
 
-        const { room, userId } = data;
+        socket.emit("users-connected", users);
 
-        socket.join(`room:${roomId}`);
+        users.push({ peerId, username });
 
-        namespace.to(`room:${roomId}`).emit("user-connected", userId);
+        console.log(users);
       });
 
       socket.on("disconnect", () => {
-        namespace.to;
+        namespace.to("room:default").emit("user-disconnected", { peerId });
+        users = users.filter((el) => el.peerId !== peerId);
       });
     });
   }
