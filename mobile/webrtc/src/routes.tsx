@@ -11,12 +11,16 @@ function Routes() {
   return (
     <Stack.Navigator>
       <Stack.Screen
+        name="CallRecieving"
+        component={CallRecieving}
+        options={{ title: "Reciving call" }}
+      />
+      <Stack.Screen
         name="Home"
         component={Home}
-        options={{ title: "Overview" }}
+        options={{ title: "Home page" }}
       />
-      <Stack.Screen name="CallRecieving" component={CallRecieving} />
-      <Stack.Screen name="Call" component={Call} />
+      <Stack.Screen name="Call" component={Call} options={{ title: "Room" }} />
     </Stack.Navigator>
   );
 }

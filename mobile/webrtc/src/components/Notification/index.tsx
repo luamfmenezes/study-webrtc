@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect } from "react";
-import { Text } from "react-native";
 import OneSignal, { OpenedEventAction } from "react-native-onesignal";
+import { navigate } from "../../helpers/navigator";
 
 interface IAction extends OpenedEventAction {
   actionId?: string;
@@ -23,7 +23,7 @@ const Notification = () => {
 
       const { actionId = "default" }: IAction = action;
 
-      // console.log(id, actionId, data);
+      navigate("Call", { roomId: "roomId" });
     });
 
     OneSignal.setNotificationOpenedHandler(() => {

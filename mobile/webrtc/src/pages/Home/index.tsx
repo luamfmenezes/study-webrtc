@@ -4,7 +4,7 @@ import { Text } from "react-native";
 // import { Container } from './styles';
 
 const Home: React.FC = () => {
-  return <Text>Home</Text>;
+  return <Text>Wait for a calling</Text>;
 };
 
 export default Home;
