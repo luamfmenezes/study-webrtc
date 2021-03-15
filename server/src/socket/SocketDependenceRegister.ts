@@ -1,6 +1,6 @@
 import { Namespace } from "socket.io";
-import ISocket from "../models/ISocket";
-import IUseSocket from "../models/IUseSocket";
+import ISocket from "./models/ISocket";
+import IUseSocket from "./models/IUseSocket";
 
 type IRegisterCallback = (data: Namespace) => void;
 

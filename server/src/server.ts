@@ -2,8 +2,8 @@ import express, { Application } from "express";
 import { createServer, Server as HTTPServer } from "http";
 import Socket from "./socket/Socket";
 import cors from "cors";
-import ISocket from "./models/ISocket";
-import socketRoutes from "./routes";
+import ISocket from "./socket/models/ISocket";
+import socketRoutes from "./routes/ws.routes";
 import socketContainer from "./container";
 
 export class Server {
@@ -38,6 +38,13 @@ export class Server {
 
   public listen(callback: (port: number) => void): void {
     this.io.listen(this.httpServer, 5555);
+
+    // const peerServer = require("peer").ExpressPeerServer(this.httpServer, {
+    //   debug: true,
+    //   path: "/myapp",
+    // });
+
+    // this.app.use("/peerjs", peerServer);
     this.httpServer.listen(this.DEFAULT_PORT, () =>
       callback(this.DEFAULT_PORT)
     );

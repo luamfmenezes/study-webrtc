@@ -1,5 +1,5 @@
-import ISocket from "../models/ISocket";
-import IUseSocket from "../models/IUseSocket";
+import ISocket from "./models/ISocket";
+import IUseSocket from "./models/IUseSocket";
 
 interface ISocketRoute {
   name: string;

@@ -1,8 +1,8 @@
 import { Server, Namespace } from "socket.io";
 import SocketRouter from "./SocketRouter";
-import ISocket from "../models/ISocket";
+import ISocket from "./models/ISocket";
 import SocketDependenceRegister from "./SocketDependenceRegister";
-import IUseSocket from "../models/IUseSocket";
+import IUseSocket from "./models/IUseSocket";
 
 interface IChannelDTO {
   name: string;
