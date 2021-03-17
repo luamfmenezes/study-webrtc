@@ -23,13 +23,17 @@ class CallController {
         socket.emit("users-connected", users);
 
         users.push({ peerId, username });
-
-        console.log(users);
       });
 
       socket.on("disconnect", () => {
         namespace.to("room:default").emit("user-disconnected", { peerId });
         users = users.filter((el) => el.peerId !== peerId);
+      });
+
+      socket.on("close-room", () => {
+        console.log("close-room: " + peerId);
+        users = [];
+        namespace.to("room:default").emit("close-room");
       });
     });
   }

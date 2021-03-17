@@ -1,15 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Container } from "./styles";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import socketIo from "socket.io-client";
-import Peer, { MediaConnection } from "peerjs";
+import Peer from "peerjs";
+import {
+  Container,
+  Calling,
+  Content,
+  Footer,
+  Controllers,
+  LocalVideo,
+  RemoteVideos,
+} from "./styles";
+import { MdCallEnd } from "react-icons/md";
+import Loading from "../../components/Loading";
+import { useHistory } from "react-router";
 
 const username = `web-user: ${(Math.random() * 100).toFixed(0)}`;
 
 const socket = socketIo("http://10.0.0.108:5555/rooms", {
   query: { username },
 });
-
-socket.connect();
 
 interface IPeer {
   id: string;
@@ -20,6 +29,13 @@ const Call: React.FC = () => {
   const [localVideo, setLocalVideo] = useState<MediaStream | undefined>();
   const [peers, setPeers] = useState<IPeer[]>([]);
   const peerCallObj = useRef<any>({});
+  const myPeerRef = useRef<Peer>();
+  const { push } = useHistory();
+
+  useEffect(() => {
+    socket.connect();
+    socket.removeAllListeners();
+  }, []);
 
   useEffect(() => {
     navigator.getUserMedia(
@@ -33,19 +49,21 @@ const Call: React.FC = () => {
           path: "/myapp",
         });
 
+        myPeerRef.current = myPeer;
+
         myPeer.on("open", (peerId) => {
           socket.emit("join-room", { peerId });
         });
 
         socket.on("users-connected", (users: any[]) => {
+          console.log(users);
+
           users.forEach(({ peerId }) => {
             const call = myPeer.call(peerId, stream);
 
             call.on("stream", (stream) => addPeer({ id: peerId, stream }));
 
-            // close is not working
             call.on("close", () => {
-              console.log("close", peerId);
               setPeers((oldPeers) => oldPeers.filter((el) => el.id !== peerId));
             });
 
@@ -84,39 +102,70 @@ const Call: React.FC = () => {
     });
   };
 
-  console.log(peers);
+  const isCalling = useMemo(() => peers.length === 0, [peers]);
+
+  useEffect(() => {
+    socket.on("close-room", () => {
+      myPeerRef.current?.destroy();
+      push("/finish");
+    });
+  });
+
+  const handleCloseRoom = () => {
+    socket.emit("close-room");
+  };
 
   return (
     <Container>
-      {localVideo && (
-        <video
-          ref={(video: any) => {
-            if (video) {
-              video.srcObject = localVideo;
-            }
-          }}
-          playsInline
-          autoPlay
-          muted
-          width={320}
-          height={280}
-        />
+      {isCalling ? (
+        <Calling>
+          <h1>Calling...</h1>
+          <Loading />
+        </Calling>
+      ) : (
+        <Content>
+          {peers.map((peer) => (
+            <RemoteVideos
+              key={peer.id}
+              ref={(video: any) => {
+                if (video) {
+                  video.srcObject = peer.stream;
+                }
+              }}
+              playsInline
+              autoPlay
+              muted
+            />
+          ))}
+        </Content>
       )}
-      {peers.map((peer) => (
-        <video
-          key={peer.id}
-          ref={(video: any) => {
-            if (video) {
-              video.srcObject = peer.stream;
-            }
-          }}
-          playsInline
-          autoPlay
-          muted
-          width={320}
-          height={280}
-        />
-      ))}
+
+      <Footer>
+        <div />
+        <Controllers>
+          {!isCalling && (
+            <button>
+              <MdCallEnd color="#FFF" size={24} onClick={handleCloseRoom} />
+            </button>
+          )}
+        </Controllers>
+        <div>
+          {localVideo && (
+            <LocalVideo
+              ref={(video: any) => {
+                if (video) {
+                  video.srcObject = localVideo;
+                }
+              }}
+              playsInline
+              autoPlay
+              muted
+              width={240}
+              height={180}
+            />
+          )}
+        </div>
+      </Footer>
     </Container>
   );
 };
