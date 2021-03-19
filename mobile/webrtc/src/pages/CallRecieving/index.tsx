@@ -34,7 +34,7 @@ const CallRecieving: React.FC = () => {
         <Button onPress={handleDenied}>
           <ButtonText>Denied</ButtonText>
         </Button>
-        <Button onPress={handleAnswer} style={{ backgroundColor: "#66aa66" }}>
+        <Button onPress={handleAnswer} style={{ backgroundColor: "#00bf7c" }}>
           <ButtonText>Answer</ButtonText>
         </Button>
       </Controllers>

@@ -26,6 +26,7 @@ class CallController {
       });
 
       socket.on("disconnect", () => {
+        console.log("disconnect: " + peerId);
         namespace.to("room:default").emit("user-disconnected", { peerId });
         users = users.filter((el) => el.peerId !== peerId);
       });

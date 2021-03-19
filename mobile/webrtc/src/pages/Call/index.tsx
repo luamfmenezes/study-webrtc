@@ -2,7 +2,9 @@ import React, { useRef, useEffect, useState } from "react";
 import Peer from "react-native-peerjs";
 import socketIo from "socket.io-client";
 import { Container, LocalVideo, RemoteVideo } from "./styles";
-import { RTCView, MediaStream, mediaDevices } from "react-native-webrtc";
+import { MediaStream, mediaDevices } from "react-native-webrtc";
+import { navigate } from "../../helpers/navigator";
+import { useNavigation } from "@react-navigation/core";
 
 const socket = socketIo("http://10.0.0.108:5555/rooms", {
   query: { username: "mobile-user" },
@@ -19,6 +21,17 @@ const Call: React.FC = () => {
   const [localVideo, setLocalVideo] = useState<any>();
   const [peers, setPeers] = useState<IPeer[]>([]);
   const peerCallObj = useRef<any>({});
+  const myPeerRef = useRef<Peer>();
+
+  const { navigate } = useNavigation();
+
+  useEffect(() => {
+    socket.connect();
+    socket.removeAllListeners();
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     mediaDevices.enumerateDevices().then((sourceInfos) => {
@@ -59,14 +72,13 @@ const Call: React.FC = () => {
             path: "/myapp",
           });
 
+          myPeerRef.current = myPeer;
+
           myPeer.on("open", (peerId: any) => {
-            console.log("here2");
             socket.emit("join-room", { peerId });
           });
 
           socket.on("users-connected", (users: any[]) => {
-            console.log("users", users);
-
             users.forEach(({ peerId }) => {
               const call = myPeer.call(peerId, stream);
 
@@ -74,15 +86,18 @@ const Call: React.FC = () => {
                 addPeer({ id: peerId, stream })
               );
 
-              // close is not working
               call.on("close", () => {
-                console.log("close", peerId);
                 setPeers((oldPeers) =>
                   oldPeers.filter((el) => el.id !== peerId)
                 );
               });
 
               peerCallObj.current[peerId] = call;
+            });
+
+            socket.on("user-disconnected", ({ peerId }: any) => {
+              if (peerCallObj.current[peerId])
+                peerCallObj.current[peerId].close();
             });
           });
         })
@@ -91,6 +106,24 @@ const Call: React.FC = () => {
         });
     });
   }, []);
+
+  useEffect(() => {
+    socket.on("close-room", () => {
+      myPeerRef.current?.destroy();
+      navigate("Home");
+    });
+  });
+
+  useEffect(() => {
+    return () => {
+      console.log("destroy");
+      myPeerRef.current?.destroy();
+    };
+  }, []);
+
+  const handleCloseRoom = () => {
+    socket.emit("close-room");
+  };
 
   const addPeer = (peer: IPeer) => {
     setPeers((oldPeers) => {

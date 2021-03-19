@@ -2,11 +2,13 @@ import styled from "styled-components/native";
 
 export const Container = styled.View`
   flex: 1;
-  background-color: #222;
+  background-color: #111;
 `;
 
 export const Content = styled.View`
-  padding: 32px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 64px;
 `;
 
 export const UserName = styled.Text`
@@ -23,8 +25,8 @@ export const SubText = styled.Text`
 export const Controllers = styled.View`
   width: 100%;
   position: absolute;
-  bottom: 64px;
-  padding: 32px;
+  bottom: 32px;
+  /* padding: 32px; */
   align-items: center;
   justify-content: space-around;
   flex-direction: row;
@@ -33,7 +35,7 @@ export const Controllers = styled.View`
 export const Button = styled.TouchableOpacity`
   width: 80px;
   height: 80px;
-  background: #ff7777;
+  background: #fd0065;
   border-radius: 40px;
   justify-content: center;
   align-items: center;

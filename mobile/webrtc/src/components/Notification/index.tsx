@@ -1,6 +1,7 @@
 import React from "react";
 import { useEffect } from "react";
 import OneSignal, { OpenedEventAction } from "react-native-onesignal";
+import env from "../../config/env";
 import { navigate } from "../../helpers/navigator";
 
 interface IAction extends OpenedEventAction {
@@ -13,26 +14,26 @@ const Notification = () => {
   useEffect(() => {
     console.log("Notification initialized");
 
-    OneSignal.setAppId("66fd6f02-0d9a-46bd-ba2a-2f1ce93060e3");
+    console.log(env.oneSignalKey);
+
+    OneSignal.setAppId(env.oneSignalKey);
 
     OneSignal.setNotificationOpenedHandler((event) => {
       const { action, notification } = event;
 
       const id = notification.notificationId;
       const data = notification.additionalData;
-
       const { actionId = "default" }: IAction = action;
 
-      navigate("Call", { roomId: "roomId" });
+      navigate("Call", { roomId: "defaultRoom" });
     });
 
     OneSignal.setNotificationOpenedHandler(() => {
-      // console.log("paralele event");
+      // paralele event
     });
 
-    OneSignal.setExternalUserId(externalUserId, (results) => {
-      // console.log("user-id: ", results);
-    });
+    // Set id used on backend to direct messages
+    OneSignal.setExternalUserId(externalUserId, (results) => {});
   }, []);
 
   return null;
