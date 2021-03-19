@@ -1,10 +1,19 @@
 import React, { useRef, useEffect, useState } from "react";
-import Peer from "react-native-peerjs";
+import { Text } from "react-native";
 import socketIo from "socket.io-client";
-import { Container, LocalVideo, RemoteVideo } from "./styles";
-import { MediaStream, mediaDevices } from "react-native-webrtc";
-import { navigate } from "../../helpers/navigator";
-import { useNavigation } from "@react-navigation/core";
+import {
+  RTCPeerConnection,
+  RTCIceCandidate,
+  RTCSessionDescription,
+  RTCView,
+  MediaStream,
+  MediaStreamTrack,
+  mediaDevices,
+  registerGlobals,
+  MediaTrackConstraints,
+  RTCSessionDescriptionType,
+} from "react-native-webrtc";
+import Peer from "react-native-peerjs";
 
 const socket = socketIo("http://10.0.0.108:5555/rooms", {
   query: { username: "mobile-user" },
@@ -21,17 +30,6 @@ const Call: React.FC = () => {
   const [localVideo, setLocalVideo] = useState<any>();
   const [peers, setPeers] = useState<IPeer[]>([]);
   const peerCallObj = useRef<any>({});
-  const myPeerRef = useRef<Peer>();
-
-  const { navigate } = useNavigation();
-
-  useEffect(() => {
-    socket.connect();
-    socket.removeAllListeners();
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     mediaDevices.enumerateDevices().then((sourceInfos) => {
@@ -72,13 +70,14 @@ const Call: React.FC = () => {
             path: "/myapp",
           });
 
-          myPeerRef.current = myPeer;
-
           myPeer.on("open", (peerId: any) => {
+            console.log("here2");
             socket.emit("join-room", { peerId });
           });
 
           socket.on("users-connected", (users: any[]) => {
+            console.log("users", users);
+
             users.forEach(({ peerId }) => {
               const call = myPeer.call(peerId, stream);
 
@@ -86,18 +85,15 @@ const Call: React.FC = () => {
                 addPeer({ id: peerId, stream })
               );
 
+              // close is not working
               call.on("close", () => {
+                console.log("close", peerId);
                 setPeers((oldPeers) =>
                   oldPeers.filter((el) => el.id !== peerId)
                 );
               });
 
               peerCallObj.current[peerId] = call;
-            });
-
-            socket.on("user-disconnected", ({ peerId }: any) => {
-              if (peerCallObj.current[peerId])
-                peerCallObj.current[peerId].close();
             });
           });
         })
@@ -107,24 +103,6 @@ const Call: React.FC = () => {
     });
   }, []);
 
-  useEffect(() => {
-    socket.on("close-room", () => {
-      myPeerRef.current?.destroy();
-      navigate("Home");
-    });
-  });
-
-  useEffect(() => {
-    return () => {
-      console.log("destroy");
-      myPeerRef.current?.destroy();
-    };
-  }, []);
-
-  const handleCloseRoom = () => {
-    socket.emit("close-room");
-  };
-
   const addPeer = (peer: IPeer) => {
     setPeers((oldPeers) => {
       const exist = oldPeers.map((el) => el.id).includes(peer.id);
@@ -133,12 +111,21 @@ const Call: React.FC = () => {
   };
 
   return (
-    <Container>
-      {localVideo && <LocalVideo streamURL={localVideo.toURL()} />}
+    <>
+      {localVideo && (
+        <RTCView
+          streamURL={localVideo.toURL()}
+          style={{ flex: 1, width: 320, height: 280 }}
+        />
+      )}
       {peers.map((peer) => (
-        <RemoteVideo key={peer.id} streamURL={peer.stream.toURL()} />
+        <RTCView
+          key={peer.id}
+          streamURL={peer.stream.toURL()}
+          style={{ flex: 1, width: 320, height: 280 }}
+        />
       ))}
-    </Container>
+    </>
   );
 };
 

@@ -1,9 +1,8 @@
 import React from "react";
-import Call from "./pages/Call";
-import Room from "./pages/Room";
+import Routes from "./routes";
 
 function App() {
-  return <Room />;
+  return <Routes />;
 }
 
 export default App;
