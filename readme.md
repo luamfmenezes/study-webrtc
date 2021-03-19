@@ -80,6 +80,8 @@ $ cd mobile/webrtc/src/config
  #### react-native-onesignal
  https://www.npmjs.com/package/react-native-onesignal
  
+ *The libraries that require native code were installed only on android.
+ 
 
 ### 🎲 Running Mobile App.
 
