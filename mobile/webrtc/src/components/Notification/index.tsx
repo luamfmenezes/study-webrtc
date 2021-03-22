@@ -8,15 +8,15 @@ interface IAction extends OpenedEventAction {
   actionId?: string;
 }
 
-const externalUserId = "luam-fmenezes";
+const externalUserId = `luam-fmenezes-${Math.random()}`;
 
 const Notification = () => {
   useEffect(() => {
     console.log("Notification initialized");
 
-    console.log(env.oneSignalKey);
+    const key = env.oneSignalKey;
 
-    OneSignal.setAppId(env.oneSignalKey);
+    OneSignal.setAppId(key);
 
     OneSignal.setNotificationOpenedHandler((event) => {
       const { action, notification } = event;
@@ -33,7 +33,9 @@ const Notification = () => {
     });
 
     // Set id used on backend to direct messages
-    OneSignal.setExternalUserId(externalUserId, (results) => {});
+    OneSignal.setExternalUserId(externalUserId, (results) => {
+      console.log(results);
+    });
   }, []);
 
   return null;
