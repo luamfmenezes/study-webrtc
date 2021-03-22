@@ -7,9 +7,13 @@
 
 The objective of this project was to test the performance and propose some architectures to create the base of a videoCall service.
 
-## Preview
+## Preview pure WebRTC
 
 <img src="webrtcpreview.gif" data-canonical-src="webrtcpreview.gif" width="500" />
+
+## Preview PeerJS
+
+<img src="webrtcpreview2.gif" data-canonical-src="webrtcpreview.gif" width="500" />
 
 ## Installing and running the application
 ```bash
